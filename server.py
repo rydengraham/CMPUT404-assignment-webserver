@@ -36,6 +36,9 @@ GENERIC_405_ERROR = b"HTTP/1.1 405 Not Supported\r\nContent-Type: text/html\r\n\
 class MyWebServer(socketserver.BaseRequestHandler):
 
     def createFoundHttpReturn(self, header, body):
+        if header is None:
+            return b"HTTP/1.1 200 OK Found\r\n\r\n" + body
+
         return b"HTTP/1.1 200 OK Found\r\n" + header + b"\r\n\r\n" + body
 
     def createRedirectReturn(self, header):
@@ -47,9 +50,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
         # offset into www folder
         absFilePath = "www" + path.decode("utf-8")
 
-        # Check if file type is legal. We support HTML and CSS files only. We also support paths ending in /.
-        if not absFilePath.endswith(("/", ".html", ".css")):
+        #support paths ending in /
+        if absFilePath.endswith("/"):
+            absFilePath += "index.html"
 
+        if not os.path.isfile(absFilePath):
             # Add '/' here to check the folder
             absFilePath = absFilePath + "/"
             # Check if we need to redirect
@@ -60,21 +65,30 @@ class MyWebServer(socketserver.BaseRequestHandler):
             redirectHeader = b"Location: " + path + b"/\r\nContent-type: text/html"
             return self.createRedirectReturn(redirectHeader)
 
-        #support paths ending in /
-        if absFilePath.endswith("/"):
-            absFilePath += "index.html"
-
         try:
             fh = open(absFilePath, 'r', encoding="utf-8")
+
+            # Don't serve files outside of www
+            if not os.path.abspath(fh.name).startswith(os.getcwd() + "/www"):
+                return GENERIC_404_ERROR
+
             fileData = fh.read()
             fh.close()
 
             fileType, _ = mimetypes.guess_type(absFilePath)
 
-            # Add content type header, answered by Vikas Ojha: https://stackoverflow.com/questions/32651362/how-do-i-set-the-content-type-for-post-requests-in-python-requests-library
-            header = b"Content-type: " + fileType.encode("utf-8")
+            header = None
 
-            response = self.createFoundHttpReturn(header, fileData.encode("utf-8"))
+            if fileType is not None:
+                # Add content type header, answered by Vikas Ojha: https://stackoverflow.com/questions/32651362/how-do-i-set-the-content-type-for-post-requests-in-python-requests-library
+                header = b"Content-type: " + fileType.encode("utf-8")
+
+            encodedData = b""
+
+            if fileData is not None:
+                encodedData = fileData.encode("utf-8")
+
+            response = self.createFoundHttpReturn(header, encodedData)
 
             return response
         except IOError:

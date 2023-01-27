@@ -29,7 +29,10 @@ import mimetypes
 
 # try: curl -v -X GET http://127.0.0.1:8080/
 
-# 404 error template, answered by linusg: https://stackoverflow.com/questions/41852380/how-to-abort-a-python-script-and-return-a-404-error
+# linusg
+# https://stackoverflow.com/users/5952681/linusg
+# How to abort a Python script and return a 404 error?
+# https://stackoverflow.com/a/41852613, StackOverflow
 GENERIC_404_ERROR = b"HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\n\r\n<html><head></head><body><h1>404 Not Found</h1></body></html>"
 GENERIC_405_ERROR = b"HTTP/1.1 405 Not Supported\r\nContent-Type: text/html\r\n\r\n<html><head></head><body><h1>405 Method Not Supported</h1></body></html>"
 
@@ -79,8 +82,13 @@ class MyWebServer(socketserver.BaseRequestHandler):
 
             header = None
 
-            if fileType is not None:
-                # Add content type header, answered by Vikas Ojha: https://stackoverflow.com/questions/32651362/how-do-i-set-the-content-type-for-post-requests-in-python-requests-library
+            if fileType is None:
+                header = b"Content-type: application/octet-stream"
+            else:
+                # Vikas Ojha
+                # https://stackoverflow.com/users/3122880/vikas-ojha
+                # How do I set the content-type for POST requests in python-requests library?
+                # https://stackoverflow.com/a/32651400, StackOverflow
                 header = b"Content-type: " + fileType.encode("utf-8")
 
             encodedData = b""

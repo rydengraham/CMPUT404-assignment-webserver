@@ -20,6 +20,8 @@ server.py contains contributions from:
 * Mandy Meindersma
 * Ryden Graham
 
+deep.png and root.png provided by Ryden Graham
+
 But the server.py example is derived from the python documentation
 examples thus some of the code is Copyright © 2001-2013 Python
 Software Foundation; All Rights Reserved under the PSF license (GPL
